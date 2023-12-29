@@ -1,5 +1,6 @@
 import os
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QFileDialog, QProgressBar
+from PyQt5.QtGui import QPixmap, QColor, QPainter
 from PyQt5.QtCore import Qt
 from ytmusicapi import YTMusic
 from pytube import YouTube
@@ -11,23 +12,37 @@ class YouTubeDownloader(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle('YouTube Music Downloader')
+        self.setGeometry(100, 100, 300, 400)  # 調整窗口大小和位置
+        self.setWindowTitle('阿伶的音樂下載神器')
 
-        self.playlist_url_label = QLabel("YouTube Music Playlist URL:")
+        # 將頂部背景色設置為淡粉紅色接近白色
+        # self.setStyleSheet("background-color: #FFECF0; color: white;")
+
+        # 加入麵包小偷圖片，並設定大小為 500 x 200
+        image_label = QLabel(self)
+        pixmap = QPixmap("/Users/Josh/Desktop/ChiaoYoutubeListDW/bread_thief.jpg").scaled(500, 200, Qt.KeepAspectRatio)        
+        pixmap = self.set_opacity(pixmap, 0.7)  # 設定透明度為 0.7
+        image_label.setPixmap(pixmap)
+        image_label.setAlignment(Qt.AlignTop | Qt.AlignHCenter)  # 將圖片置中
+
+        self.playlist_url_label = QLabel("YouTube播放清單網址:")
         self.playlist_url_entry = QLineEdit()
 
-        self.output_path_label = QLabel("Output Path:")
+        self.output_path_label = QLabel("存放音樂檔的位置:")
         self.output_path_entry = QLineEdit()
-        self.browse_button = QPushButton("Browse")
+        self.browse_button = QPushButton("瀏覽")
         self.browse_button.clicked.connect(self.browse_output_path)
 
-        self.download_button = QPushButton("Download and Convert to MP3")
+        self.download_button = QPushButton("開始下載")
         self.download_button.clicked.connect(self.download_and_convert)
 
-        self.downloading_label = QLabel("Downloading:")
+        self.downloading_label = QLabel("下載中:")
         self.progress_bar = QProgressBar()
+        self.author_label = QLabel("By 宏瑋")
 
         layout = QVBoxLayout()
+        layout.addWidget(image_label)
+        layout.addSpacing(20)  # 增加垂直間距
         layout.addWidget(self.playlist_url_label)
         layout.addWidget(self.playlist_url_entry)
         layout.addWidget(self.output_path_label)
@@ -36,6 +51,8 @@ class YouTubeDownloader(QWidget):
         layout.addWidget(self.download_button)
         layout.addWidget(self.downloading_label)
         layout.addWidget(self.progress_bar)
+        layout.addStretch(1)  # 使用 stretch 來將下方的部分撐開
+        layout.addWidget(self.author_label, alignment=Qt.AlignBottom | Qt.AlignRight)
 
         self.setLayout(layout)
 
@@ -65,7 +82,7 @@ class YouTubeDownloader(QWidget):
                 yt = YouTube(video_url, on_progress_callback=self.show_progress)
                 audio_stream = yt.streams.filter(only_audio=True, file_extension='mp4').first()
 
-                self.downloading_label.setText(f"Downloading: {yt.title}")
+                self.downloading_label.setText(f"Downloading: {yt.title}...")
                 self.progress_bar.setValue(0)
                 self.progress_bar.setMaximum(100)
 
@@ -88,7 +105,15 @@ class YouTubeDownloader(QWidget):
 
         percent = int((bytes_downloaded / total_size) * 100)
         self.progress_bar.setValue(percent)
-        QApplication.processEvents()  # 使界面即時更新
+
+    def set_opacity(self, pixmap, opacity):
+        transparent_pixmap = QPixmap(pixmap.size())
+        transparent_pixmap.fill(QColor(0, 0, 0, 0))
+        painter = QPainter(transparent_pixmap)
+        painter.setOpacity(opacity)
+        painter.drawPixmap(0, 0, pixmap)
+        painter.end()
+        return transparent_pixmap
 
 if __name__ == '__main__':
     app = QApplication([])
